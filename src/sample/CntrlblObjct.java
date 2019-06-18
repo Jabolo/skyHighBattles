@@ -44,14 +44,18 @@ public class CntrlblObjct {
         return view.getRotate();
     }
 
+    public void setRotateObj() {
+        view.setRotate(view.getRotate() - 90);
+    }
+
     public void rotateRight() {
         view.setRotate(view.getRotate() + 3);
-        setVelocity(new Point2D(Math.cos(Math.toRadians(getRotate())), Math.sin(Math.toRadians(getRotate()))));
+        setVelocity(new Point2D(Math.cos(Math.toRadians(getRotate())) * 3, Math.sin(Math.toRadians(getRotate())) * 3));
     }
 
     public void rotateLeft() {
         view.setRotate(view.getRotate() - 3);
-        setVelocity(new Point2D(Math.cos(Math.toRadians(getRotate())), Math.sin(Math.toRadians(getRotate()))));
+        setVelocity(new Point2D(Math.cos(Math.toRadians(getRotate())) * 3, Math.sin(Math.toRadians(getRotate())) * 3));
     }
 
     public boolean isColliding(CntrlblObjct sth) {

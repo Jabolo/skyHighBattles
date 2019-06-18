@@ -7,11 +7,14 @@ import javafx.event.EventHandler;
 import javafx.geometry.Point2D;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
+import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
 import javafx.stage.Stage;
 
@@ -30,6 +33,7 @@ public class Sky_High_Battles extends Application {
     private Pane root;
     private List<CntrlblObjct> bullets = new ArrayList<CntrlblObjct>();
     private List<CntrlblObjct> enemies = new ArrayList<CntrlblObjct>();
+    private List<CntrlblObjct> walls = new ArrayList<CntrlblObjct>();
     private CntrlblObjct player;
 
     static void main(String[] args) {
@@ -39,21 +43,25 @@ public class Sky_High_Battles extends Application {
     //spawning
 
     private Parent createContent() {
-        root = new Pane();
+        root = new Pane(new ImageView(new Image("kwadraty.jpg")));
         root.setPrefSize(600, 600);
+
         player = new Player();
         player.setVelocity(new Point2D(1, 0));
 
-
         addCntrlblObjct(player, root.getPrefWidth() / 2, root.getPrefHeight() / 2);
-
+        addWall(new Wall(), 10, 0, false);
+        addWall(new Wall(), 590, 0, false);
+        addWall(new Wall(), 300, -290, true);
+        addWall(new Wall(), 300, 290, true);
         AnimationTimer timer = new AnimationTimer() {
             @Override
             public void handle(long now) {
-                onUpdate();
+                if (!player.isNotAlive()) onUpdate();
             }
         };
         timer.start();
+
         return root;
     }
 
@@ -67,6 +75,13 @@ public class Sky_High_Battles extends Application {
         addCntrlblObjct(enemy, x, y);
     }
 
+    private void addWall(CntrlblObjct wall, double x, double y, boolean isRotated) {
+        if (isRotated) wall.setRotateObj();
+        walls.add(wall);
+        addCntrlblObjct(wall, x, y);
+    }
+
+
     private void addCntrlblObjct(CntrlblObjct obj, double x, double y) {
         obj.getView().setTranslateX(x);
         obj.getView().setTranslateY(y);
@@ -75,14 +90,33 @@ public class Sky_High_Battles extends Application {
     }
 
     private void onUpdate() { //60times per sec
-        for (CntrlblObjct bullet : bullets) {
-            for (CntrlblObjct enemy : enemies) {
+        for (CntrlblObjct enemy : enemies) {
+            if (player.isColliding(enemy)) {
+                player.setAlive(false);
+                //from view
+                root.getChildren().removeAll(player.getView());
+            }
+            for (CntrlblObjct bullet : bullets) {
                 if (bullet.isColliding(enemy)) {
                     bullet.setAlive(false);
                     enemy.setAlive(false);
 
                     //remove from view
                     root.getChildren().removeAll(bullet.getView(), enemy.getView());
+                }
+            }
+        }
+        for (CntrlblObjct wall : walls) {
+            if (player.isColliding(wall)) {
+                player.setAlive(false);
+                //from view
+                root.getChildren().remove(player.getView());
+            } else {
+                for (CntrlblObjct bullet : bullets) {
+                    if (bullet.isColliding(wall)) {
+                        bullet.setAlive(false);
+                        root.getChildren().remove(bullet.getView());
+                    }
                 }
             }
         }
@@ -95,7 +129,6 @@ public class Sky_High_Battles extends Application {
         enemies.forEach(CntrlblObjct::update);
 
         player.update();
-
         if (Math.random() < 0.02) {//how often it spawns
             addEnemy(new Enemy(), Math.random() * root.getPrefWidth(), Math.random() * root.getPrefHeight());
         }
@@ -136,7 +169,7 @@ public class Sky_High_Battles extends Application {
                 if (keyEvent.getCode() == KeyCode.D) dPressed = false;
             }
         });
-
+        theStage.setResizable(false);
         theStage.show();
     }
 
@@ -160,6 +193,12 @@ public class Sky_High_Battles extends Application {
     private static class Bullet extends CntrlblObjct {
         Bullet() {
             super(new Circle(2, 2, 2, Color.BLACK));
+        }
+    }
+
+    private static class Wall extends CntrlblObjct {
+        Wall() {
+            super(new Line(0, 0, 0, 600));
         }
     }
 }
