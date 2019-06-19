@@ -10,6 +10,9 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 
+/**
+ * start aplikacji
+ */
 public class Sky_High_Battles extends Application {
 
 
@@ -18,17 +21,19 @@ public class Sky_High_Battles extends Application {
     }
 
 
-
+    /**
+     * wywołanie menu początkowego
+     *
+     * @param theStage
+     * @throws Exception
+     */
     @Override
     public void start(Stage theStage) throws Exception {
         Pane root = new Pane(new ImageView(new Image("kwadraty.jpg")));
         root.setPrefSize(600, 600);
-
         Parent sceneBuild = FXMLLoader.load(getClass().getResource("sample.fxml"));
         root.getChildren().add(sceneBuild);
         theStage.setScene(new Scene(root, 600, 600));
-
-
         theStage.show();
     }
 }

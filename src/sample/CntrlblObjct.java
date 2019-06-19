@@ -3,7 +3,10 @@ package sample;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 
-
+/**
+ * wszystkie widoczne grafkiki podczas animacji sa wlasnie tej klasy
+ * w tej klasie ustala sie predkosc obiektu, kat jego ruchu oraz to stwierdza czy koliduje z innym
+ */
 public class CntrlblObjct {
 
     private Node view;
@@ -49,6 +52,9 @@ public class CntrlblObjct {
         view.setRotate(view.getRotate() - 90);
     }
 
+    /**
+     * obrot dodaje prędkosci, aby z poczatku gracz odrazu nie uderzyl w kurtynę
+     */
     public void rotateRight() {
         view.setRotate(view.getRotate() + 3);
         setVelocity(new Point2D(Math.cos(Math.toRadians(getRotate())) * 2, Math.sin(Math.toRadians(getRotate())) * 2));
@@ -63,11 +69,10 @@ public class CntrlblObjct {
         return getView().getBoundsInParent().intersects(sth.getView().getBoundsInParent());
     }
 
+    public boolean isColliding_Contains(CntrlblObjct sth) {
+        return getView().getBoundsInParent().contains(sth.getView().getBoundsInParent());
+    }
     public double getFireSpeed() {
         return fireSpeed;
-    }
-
-    public void setFireSpeed(double fireSpeed) {
-        this.fireSpeed = fireSpeed;
     }
 }
