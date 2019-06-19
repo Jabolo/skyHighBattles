@@ -10,6 +10,7 @@ public class CntrlblObjct {
     private Point2D velocity = new Point2D(0, 0);
 
     private boolean alive = true;
+    private double fireSpeed = 10;
 
     public CntrlblObjct(Node view) {
         this.view = view;
@@ -50,16 +51,23 @@ public class CntrlblObjct {
 
     public void rotateRight() {
         view.setRotate(view.getRotate() + 3);
-        setVelocity(new Point2D(Math.cos(Math.toRadians(getRotate())) * 3, Math.sin(Math.toRadians(getRotate())) * 3));
+        setVelocity(new Point2D(Math.cos(Math.toRadians(getRotate())) * 2, Math.sin(Math.toRadians(getRotate())) * 2));
     }
 
     public void rotateLeft() {
         view.setRotate(view.getRotate() - 3);
-        setVelocity(new Point2D(Math.cos(Math.toRadians(getRotate())) * 3, Math.sin(Math.toRadians(getRotate())) * 3));
+        setVelocity(new Point2D(Math.cos(Math.toRadians(getRotate())) * 2, Math.sin(Math.toRadians(getRotate())) * 2));
     }
 
     public boolean isColliding(CntrlblObjct sth) {
         return getView().getBoundsInParent().intersects(sth.getView().getBoundsInParent());
     }
 
+    public double getFireSpeed() {
+        return fireSpeed;
+    }
+
+    public void setFireSpeed(double fireSpeed) {
+        this.fireSpeed = fireSpeed;
+    }
 }
