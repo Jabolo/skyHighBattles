@@ -14,6 +14,7 @@ public class CntrlblObjct {
 
     private boolean alive = true;
     private double fireSpeed = 10;
+    private double spawnTime;
 
     public CntrlblObjct(Node view) {
         this.view = view;
@@ -72,7 +73,16 @@ public class CntrlblObjct {
     public boolean isColliding_Contains(CntrlblObjct sth) {
         return getView().getBoundsInParent().contains(sth.getView().getBoundsInParent());
     }
+
     public double getFireSpeed() {
         return fireSpeed;
+    }
+
+    public void setTime() {
+        spawnTime = System.currentTimeMillis();
+    }
+
+    public double getTime() {
+        return spawnTime;
     }
 }

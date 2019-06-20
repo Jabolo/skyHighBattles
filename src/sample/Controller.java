@@ -37,8 +37,9 @@ import java.util.ResourceBundle;
 
 public class Controller implements Initializable {
 
-    boolean aPressed = false;
-    boolean dPressed = false;
+
+    boolean leftPressed = false;
+    boolean rightPressed = false;
     boolean spacePressed = false;
     boolean fire = false;
     int counterFireSpeed = 0;
@@ -51,6 +52,7 @@ public class Controller implements Initializable {
     private IntegerProperty EXP = new SimpleIntegerProperty();
     private Pane root;
     private List<CntrlblObjct> bullets = new ArrayList<CntrlblObjct>();
+    private List<CntrlblObjct> bulletsNoDamage = new ArrayList<CntrlblObjct>();
     private List<CntrlblObjct> enemies = new ArrayList<CntrlblObjct>();
     private List<CntrlblObjct> walls = new ArrayList<CntrlblObjct>();
     private List<CntrlblObjct> bulletsEnemies = new ArrayList<CntrlblObjct>();
@@ -61,9 +63,11 @@ public class Controller implements Initializable {
     Text txtid;
 
     /**
+     * obluga klawisza w menu koncowym
+     *
      * @param event
      * @throws Exception
-     * @throws IOException obłsuga eventów
+     * @throws IOException
      */
     public void endButtonPushed(ActionEvent event) throws Exception, IOException {
         theStage = (Stage) ((Node) event.getSource()).getScene().getWindow();
@@ -75,6 +79,13 @@ public class Controller implements Initializable {
         theStage.show();
     }
 
+    /**
+     * obługa klawiatury podczas gry
+     *
+     * @param event
+     * @throws Exception
+     * @throws IOException
+     */
     public void startButtonPushed(ActionEvent event) throws Exception, IOException {
         theStage = (Stage) ((Node) event.getSource()).getScene().getWindow();
         theStage.setScene(new Scene(createContent()));
@@ -83,37 +94,18 @@ public class Controller implements Initializable {
             @Override
             public void handle(KeyEvent keyEvent) {
                 if (keyEvent.getCode() == KeyCode.SPACE) spacePressed = true;
-                if (keyEvent.getCode() == KeyCode.A) aPressed = true;
-                if (keyEvent.getCode() == KeyCode.D) dPressed = true;
+                if (keyEvent.getCode() == KeyCode.LEFT) leftPressed = true;
+                if (keyEvent.getCode() == KeyCode.RIGHT) rightPressed = true;
             }
         });
         theStage.getScene().setOnKeyReleased(new EventHandler<KeyEvent>() {
             @Override
             public void handle(KeyEvent keyEvent) {
                 if (keyEvent.getCode() == KeyCode.SPACE) spacePressed = false;
-                if (keyEvent.getCode() == KeyCode.A) aPressed = false;
-                if (keyEvent.getCode() == KeyCode.D) dPressed = false;
+                if (keyEvent.getCode() == KeyCode.LEFT) leftPressed = false;
+                if (keyEvent.getCode() == KeyCode.RIGHT) rightPressed = false;
             }
         });
-        /**
-         * powrót do menu początkowego
-         */
-//        reset.setOnAction(new EventHandler<ActionEvent>() {
-//            @Override
-//            public void handle(ActionEvent event) {
-//                Pane root = new Pane(new ImageView(new Image("kwadraty.jpg")));
-//                root.setPrefSize(600, 600);
-//
-//                Parent sceneBuild = null;
-//                try {
-//                    sceneBuild = load(getClass().getResource("sample.fxml"));
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
-//                root.getChildren().add(sceneBuild);
-//                theStage.setScene(new Scene(root, 600, 600));
-//            }
-//        });
         theStage.setResizable(false);
         theStage.show();
         //}));
@@ -121,6 +113,7 @@ public class Controller implements Initializable {
 
     /**
      * rysowanie pola gry, stanu początowego mapy
+     *
      * @return
      */
     private Parent createContent() {
@@ -154,12 +147,17 @@ public class Controller implements Initializable {
             timer.start();
             startAnime = false;
         }
-        if(player.isNotAlive()) timer.stop();
+        if (player.isNotAlive()) timer.stop();
         return root;
     }
 
     private void addBullet(CntrlblObjct bullet, double x, double y) {
         bullets.add(bullet);
+        addCntrlblObjct(bullet, x, y);
+    }
+
+    private void addBulletNoDamage(CntrlblObjct bullet, double x, double y) {
+        bulletsNoDamage.add(bullet);
         addCntrlblObjct(bullet, x, y);
     }
 
@@ -181,6 +179,7 @@ public class Controller implements Initializable {
 
     /**
      * dodanie obiektu do pola gry
+     *
      * @param obj
      * @param x
      * @param y
@@ -203,7 +202,7 @@ public class Controller implements Initializable {
     private void onUpdate() { //60times per sec
         for (CntrlblObjct enemy : enemies) {
             //collision enemy : player
-            if (player.isColliding(enemy)) {
+            if (player.isColliding_Contains(enemy)) {
                 player.setAlive(false);
 
             }
@@ -250,7 +249,7 @@ public class Controller implements Initializable {
 /**
  * spawn przeciwników
  */
-        if (Math.random() < 0.02) {//how often it spawns
+        if (Math.random() < 0.03) {//how often it spawns
             addEnemy(new Enemy(), Math.random() * root.getPrefWidth(), Math.random() * root.getPrefHeight());
         }
         /**
@@ -258,14 +257,27 @@ public class Controller implements Initializable {
          */
         counterFireSpeed++;
         if (counterFireSpeed >= 60 / player.getFireSpeed()) fire = true;
-        if (aPressed) player.rotateLeft();
-        if (dPressed) player.rotateRight();
+        if (leftPressed) player.rotateLeft();
+        if (rightPressed) player.rotateRight();
         if (spacePressed == true && fire == true) {
             Bullet bullet = new Bullet();
             bullet.setVelocity(player.getVelocity().normalize().multiply(bullet.getBulletSpeed()));
             addBullet(bullet, player.getView().getTranslateX() + 20, player.getView().getTranslateY() + 20);
+
             fire = false;
             counterFireSpeed = 0;
+        }
+        //smuga
+        Bullet bullet2 = new Bullet();
+        bullet2.setVelocity(player.getVelocity().normalize().multiply(0));
+        bullet2.setTime();
+        addBulletNoDamage(bullet2, player.getView().getTranslateX() + 20, player.getView().getTranslateY() + 20);
+
+        for (CntrlblObjct bulletNoDam : bulletsNoDamage) {
+            if (System.currentTimeMillis() - bulletNoDam.getTime() > 2000) {
+                bulletNoDam.setAlive(false);
+                root.getChildren().removeAll(bulletNoDam.getView());
+            }
         }
         //enemy vel
         /**
@@ -281,28 +293,29 @@ public class Controller implements Initializable {
             //enemy bullet
             if (Math.random() < enemy.getFireSpeed() / 500) {
                 Bullet bullet = new Bullet();
-                bullet.setBulletSpeed(3);
+                bullet.setBulletSpeed(2);
                 bullet.setVelocity(enemyVel.multiply(bullet.getBulletSpeed()));
                 addBulletEnemie(bullet, enemy.getView().getTranslateX() + 20, enemy.getView().getTranslateY() + 20);
             }
+
         }
         counterEnemySpeed = 0;
 
 /**
- * czyszczenie list z niepotrzebnych już obiktów
+ * czyszczenie list z niepotrzebnych już obiektow
  */
         //remove from model
         bullets.removeIf(CntrlblObjct::isNotAlive); //if is dead - remove it from list
         enemies.removeIf(CntrlblObjct::isNotAlive);
         bulletsEnemies.removeIf(CntrlblObjct::isNotAlive);
+        bulletsNoDamage.removeIf(CntrlblObjct::isNotAlive);
 
         bullets.forEach(CntrlblObjct::update);
         enemies.forEach(CntrlblObjct::update);
         bulletsEnemies.forEach(CntrlblObjct::update);
-
-
+        bulletsNoDamage.forEach(CntrlblObjct::update);
 /**
- * Jeśli gracz nie przeszedł dalej, wyświetlenie podsumowania
+ * Jeśli gracz nie przeszedł dalej, wyświetlenie podsumowania, ostatnie menu
  */
         if (player.isNotAlive()) {
             //theend
@@ -310,11 +323,8 @@ public class Controller implements Initializable {
             enemies.removeAll(enemies);
             bulletsEnemies.removeAll(bulletsEnemies);
             root.getChildren().removeAll();
-
             try {
-
                 root.getChildren().add(FXMLLoader.load(getClass().getResource("AfterGame.fxml")));
-
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -325,12 +335,10 @@ public class Controller implements Initializable {
             textPoints.setStyle("-fx-font-size: 50px");
         } else
             player.update();
-
     }
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-
     }
 }
 
