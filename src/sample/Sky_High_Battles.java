@@ -30,8 +30,7 @@ public class Sky_High_Battles extends Application {
     @Override
     public void start(Stage theStage) throws Exception {
         Pane root = new Pane(new ImageView(new Image("kwadraty.jpg")));
-        root.setPrefSize(600, 600);
-        Parent sceneBuild = FXMLLoader.load(getClass().getResource("sample.fxml"));
+        Parent sceneBuild = FXMLLoader.load(getClass().getResource("menuStart.fxml"));
         root.getChildren().add(sceneBuild);
         theStage.setScene(new Scene(root, 600, 600));
         theStage.show();

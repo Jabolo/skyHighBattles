@@ -22,6 +22,7 @@ public class Enemy extends CntrlblObjct {
 //                20,0,
 //                25, 15));
         super(new Circle(15, 15, 15, Color.GOLD));
+        this.setColor(Color.YELLOW);
     }
 }
 

@@ -8,6 +8,7 @@ import javafx.scene.shape.Polygon;
 public class Player extends CntrlblObjct {
 
     Player() {
+
         super(new Polygon(40, 20,
                 0, 40,
                 10, 25,

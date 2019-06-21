@@ -4,8 +4,6 @@ import javafx.animation.AnimationTimer;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
-import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.geometry.Point2D;
@@ -17,8 +15,8 @@ import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Pane;
+import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
@@ -41,6 +39,7 @@ public class Controller implements Initializable {
     boolean leftPressed = false;
     boolean rightPressed = false;
     boolean spacePressed = false;
+    boolean straightPressed = false;
     boolean fire = false;
     int counterFireSpeed = 0;
     int counterEnemySpeed = 0;
@@ -57,10 +56,6 @@ public class Controller implements Initializable {
     private List<CntrlblObjct> walls = new ArrayList<CntrlblObjct>();
     private List<CntrlblObjct> bulletsEnemies = new ArrayList<CntrlblObjct>();
     private CntrlblObjct player;
-    @FXML
-    Label pkts;
-    @FXML
-    Text txtid;
 
     /**
      * obluga klawisza w menu koncowym
@@ -73,7 +68,7 @@ public class Controller implements Initializable {
         theStage = (Stage) ((Node) event.getSource()).getScene().getWindow();
         Pane root = new Pane(new ImageView(new Image("kwadraty.jpg")));
         root.setPrefSize(600, 600);
-        Parent sceneBuild = FXMLLoader.load(getClass().getResource("sample.fxml"));
+        Parent sceneBuild = FXMLLoader.load(getClass().getResource("menuStart.fxml"));
         root.getChildren().add(sceneBuild);
         theStage.setScene(new Scene(root, 600, 600));
         theStage.show();
@@ -83,28 +78,22 @@ public class Controller implements Initializable {
      * obługa klawiatury podczas gry
      *
      * @param event
-     * @throws Exception
-     * @throws IOException
      */
-    public void startButtonPushed(ActionEvent event) throws Exception, IOException {
+    public void startButtonPushed(ActionEvent event) {
         theStage = (Stage) ((Node) event.getSource()).getScene().getWindow();
         theStage.setScene(new Scene(createContent()));
 
-        theStage.getScene().setOnKeyPressed(new EventHandler<KeyEvent>() {
-            @Override
-            public void handle(KeyEvent keyEvent) {
-                if (keyEvent.getCode() == KeyCode.SPACE) spacePressed = true;
-                if (keyEvent.getCode() == KeyCode.LEFT) leftPressed = true;
-                if (keyEvent.getCode() == KeyCode.RIGHT) rightPressed = true;
-            }
+        theStage.getScene().setOnKeyPressed(keyEvent -> {
+            if (keyEvent.getCode() == KeyCode.SPACE) spacePressed = true;
+            if (keyEvent.getCode() == KeyCode.A) leftPressed = true;
+            if (keyEvent.getCode() == KeyCode.D) rightPressed = true;
+            if (keyEvent.getCode() == KeyCode.W) straightPressed = true;
         });
-        theStage.getScene().setOnKeyReleased(new EventHandler<KeyEvent>() {
-            @Override
-            public void handle(KeyEvent keyEvent) {
-                if (keyEvent.getCode() == KeyCode.SPACE) spacePressed = false;
-                if (keyEvent.getCode() == KeyCode.LEFT) leftPressed = false;
-                if (keyEvent.getCode() == KeyCode.RIGHT) rightPressed = false;
-            }
+        theStage.getScene().setOnKeyReleased(keyEvent -> {
+            if (keyEvent.getCode() == KeyCode.SPACE) spacePressed = false;
+            if (keyEvent.getCode() == KeyCode.A) leftPressed = false;
+            if (keyEvent.getCode() == KeyCode.D) rightPressed = false;
+            if (keyEvent.getCode() == KeyCode.W) straightPressed = false;
         });
         theStage.setResizable(false);
         theStage.show();
@@ -121,7 +110,7 @@ public class Controller implements Initializable {
         root.setPrefSize(600, 600);
 
         player = new Player();
-        player.setVelocity(new Point2D(1, 0));
+        player.setVelocity(new Point2D(0, 0));
 
         addCntrlblObjct(player, root.getPrefWidth() / 2, root.getPrefHeight() / 2);
         addWall(new Wall(), 10, 0, false);
@@ -158,12 +147,15 @@ public class Controller implements Initializable {
 
     private void addBulletNoDamage(CntrlblObjct bullet, double x, double y) {
         bulletsNoDamage.add(bullet);
+        bullet.setSpawnTime();
         addCntrlblObjct(bullet, x, y);
     }
 
     private void addBulletEnemie(CntrlblObjct bullet, double x, double y) {
         bulletsEnemies.add(bullet);
+        bullet.setSpawnTime();
         addCntrlblObjct(bullet, x, y);
+        bullet.setColor(Color.RED);
     }
 
     private void addEnemy(CntrlblObjct enemy, double x, double y) {
@@ -243,7 +235,11 @@ public class Controller implements Initializable {
             if (player.isColliding_Contains(bulletFromEnemie)) {
                 player.setAlive(false);
                 bulletFromEnemie.setAlive(false);
-                root.getChildren().removeAll(bulletFromEnemie.getView());
+                root.getChildren().remove(bulletFromEnemie.getView());
+            }
+            if (System.currentTimeMillis() - bulletFromEnemie.getSpawnTime() > 3000) {
+                bulletFromEnemie.setAlive(false);
+                root.getChildren().remove(bulletFromEnemie.getView());
             }
         }
 /**
@@ -257,11 +253,14 @@ public class Controller implements Initializable {
          */
         counterFireSpeed++;
         if (counterFireSpeed >= 60 / player.getFireSpeed()) fire = true;
-        if (leftPressed) player.rotateLeft();
+
         if (rightPressed) player.rotateRight();
+        if (leftPressed) player.rotateLeft();
+        if (straightPressed) player.moveStraight();
+        if (!straightPressed) player.setVelocity(new Point2D(0, 0));
         if (spacePressed == true && fire == true) {
             Bullet bullet = new Bullet();
-            bullet.setVelocity(player.getVelocity().normalize().multiply(bullet.getBulletSpeed()));
+            bullet.setVelocity(new Point2D(Math.cos(Math.toRadians(player.getRotate())) * 2, Math.sin(Math.toRadians(player.getRotate())) * 2).normalize().multiply(3));
             addBullet(bullet, player.getView().getTranslateX() + 20, player.getView().getTranslateY() + 20);
 
             fire = false;
@@ -270,13 +269,12 @@ public class Controller implements Initializable {
         //smuga
         Bullet bullet2 = new Bullet();
         bullet2.setVelocity(player.getVelocity().normalize().multiply(0));
-        bullet2.setTime();
         addBulletNoDamage(bullet2, player.getView().getTranslateX() + 20, player.getView().getTranslateY() + 20);
 
         for (CntrlblObjct bulletNoDam : bulletsNoDamage) {
-            if (System.currentTimeMillis() - bulletNoDam.getTime() > 2000) {
+            if (System.currentTimeMillis() - bulletNoDam.getSpawnTime() > 2000) {
                 bulletNoDam.setAlive(false);
-                root.getChildren().removeAll(bulletNoDam.getView());
+                root.getChildren().remove(bulletNoDam.getView());
             }
         }
         //enemy vel
@@ -293,11 +291,10 @@ public class Controller implements Initializable {
             //enemy bullet
             if (Math.random() < enemy.getFireSpeed() / 500) {
                 Bullet bullet = new Bullet();
-                bullet.setBulletSpeed(2);
+                bullet.setBulletSpeed(5);
                 bullet.setVelocity(enemyVel.multiply(bullet.getBulletSpeed()));
                 addBulletEnemie(bullet, enemy.getView().getTranslateX() + 20, enemy.getView().getTranslateY() + 20);
             }
-
         }
         counterEnemySpeed = 0;
 
@@ -324,7 +321,7 @@ public class Controller implements Initializable {
             bulletsEnemies.removeAll(bulletsEnemies);
             root.getChildren().removeAll();
             try {
-                root.getChildren().add(FXMLLoader.load(getClass().getResource("AfterGame.fxml")));
+                root.getChildren().add(FXMLLoader.load(getClass().getResource("menuAfterGame.fxml")));
             } catch (IOException e) {
                 e.printStackTrace();
             }

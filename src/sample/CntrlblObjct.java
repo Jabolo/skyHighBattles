@@ -2,6 +2,8 @@ package sample;
 
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Shape;
 
 /**
  * wszystkie widoczne grafkiki podczas animacji sa wlasnie tej klasy
@@ -9,14 +11,15 @@ import javafx.scene.Node;
  */
 public class CntrlblObjct {
 
-    private Node view;
+    private Shape view;
     private Point2D velocity = new Point2D(0, 0);
 
     private boolean alive = true;
     private double fireSpeed = 10;
     private double spawnTime;
 
-    public CntrlblObjct(Node view) {
+
+    public CntrlblObjct(Shape view) {
         this.view = view;
     }
 
@@ -35,6 +38,10 @@ public class CntrlblObjct {
 
     public Node getView() {
         return view;
+    }
+
+    public void setColor(Color x) {
+        view.setFill(x);
     }
 
     public void setAlive(boolean alive) {
@@ -57,12 +64,16 @@ public class CntrlblObjct {
      * obrot dodaje prędkosci, aby z poczatku gracz odrazu nie uderzyl w kurtynę
      */
     public void rotateRight() {
-        view.setRotate(view.getRotate() + 3);
-        setVelocity(new Point2D(Math.cos(Math.toRadians(getRotate())) * 2, Math.sin(Math.toRadians(getRotate())) * 2));
+        view.setRotate(view.getRotate() + 5);
+        //setVelocity(new Point2D(Math.cos(Math.toRadians(getRotate())) * 2, Math.sin(Math.toRadians(getRotate())) * 2));
     }
 
     public void rotateLeft() {
-        view.setRotate(view.getRotate() - 3);
+        view.setRotate(view.getRotate() - 5);
+        //setVelocity(new Point2D(Math.cos(Math.toRadians(getRotate())) * 2, Math.sin(Math.toRadians(getRotate())) * 2));
+    }
+
+    public void moveStraight() {
         setVelocity(new Point2D(Math.cos(Math.toRadians(getRotate())) * 2, Math.sin(Math.toRadians(getRotate())) * 2));
     }
 
@@ -78,11 +89,11 @@ public class CntrlblObjct {
         return fireSpeed;
     }
 
-    public void setTime() {
+    public void setSpawnTime() {
         spawnTime = System.currentTimeMillis();
     }
 
-    public double getTime() {
+    public double getSpawnTime() {
         return spawnTime;
     }
 }
