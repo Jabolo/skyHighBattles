@@ -1,6 +1,5 @@
 package sample;
 
-import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 
 
@@ -8,13 +7,16 @@ import javafx.scene.shape.Circle;
  * obiekty Klasy Bullet sa rowniez klasy CntrlblObjct i posiadaja wszysktie jej cechy
  */
 public class Bullet extends CntrlblObjct {
+
+    private double bulletSpeed = 10;
+    private int bulletPenetration = 1;
+    private int bulletDamage = 10;
+
     /**
      * wywołąnie konstruktora klasy nadzrzędnej
      */
-    private double bulletSpeed = 5;
-
     Bullet() {
-        super(new Circle(2, 2, 2, Color.BLACK));
+        super(new Circle(2, 2, 2));
     }
 
     public double getBulletSpeed() {
@@ -23,6 +25,22 @@ public class Bullet extends CntrlblObjct {
 
     public void setBulletSpeed(double bulletSpeed) {
         this.bulletSpeed = bulletSpeed;
+    }
+
+    public int getBulletPenetration() {
+        return bulletPenetration;
+    }
+
+    public void setBulletPenetration(int bulletPenetration) {
+        this.bulletPenetration = bulletPenetration;
+    }
+
+    public int getBulletDamage() {
+        return bulletDamage;
+    }
+
+    public void setBulletDamage(int bulletDamage) {
+        this.bulletDamage = bulletDamage;
     }
 
 

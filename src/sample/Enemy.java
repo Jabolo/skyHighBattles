@@ -8,6 +8,7 @@ import javafx.scene.shape.Circle;
  * nadaje ksztalt przeciwnikom
  */
 public class Enemy extends CntrlblObjct {
+
     Enemy() {
 //        super(new Polygon(40, 20,
 //                25, 25,
@@ -22,7 +23,14 @@ public class Enemy extends CntrlblObjct {
 //                20,0,
 //                25, 15));
         super(new Circle(15, 15, 15, Color.GOLD));
-        this.setColor(Color.YELLOW);
+        //this.setColor(Color.web("00FF00"));
+    }
+
+    public void update() {
+        super.update();
+        if (getHealthPoints() < 0.75 * getHealthPointsMax()) setColor(Color.ORANGE);
+        if (getHealthPoints() < 0.5 * getHealthPointsMax()) setColor(Color.INDIANRED);
+        if (getHealthPoints() < 0.25 * getHealthPointsMax()) setColor(Color.DARKRED);
     }
 }
 

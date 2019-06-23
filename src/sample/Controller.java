@@ -40,6 +40,7 @@ public class Controller implements Initializable {
     boolean rightPressed = false;
     boolean spacePressed = false;
     boolean straightPressed = false;
+    private boolean backPressed = false;
     boolean fire = false;
     int counterFireSpeed = 0;
     int counterEnemySpeed = 0;
@@ -50,12 +51,13 @@ public class Controller implements Initializable {
     Stage theStage;
     private IntegerProperty EXP = new SimpleIntegerProperty();
     private Pane root;
-    private List<CntrlblObjct> bullets = new ArrayList<CntrlblObjct>();
-    private List<CntrlblObjct> bulletsNoDamage = new ArrayList<CntrlblObjct>();
-    private List<CntrlblObjct> enemies = new ArrayList<CntrlblObjct>();
+    private List<Bullet> bullets = new ArrayList<>();
+    private List<Bullet> bulletsNoDamage = new ArrayList<>();
+    private List<Enemy> enemies = new ArrayList<>();
     private List<CntrlblObjct> walls = new ArrayList<CntrlblObjct>();
-    private List<CntrlblObjct> bulletsEnemies = new ArrayList<CntrlblObjct>();
+    private List<Bullet> bulletsEnemies = new ArrayList<>();
     private CntrlblObjct player;
+
 
     /**
      * obluga klawisza w menu koncowym
@@ -88,12 +90,14 @@ public class Controller implements Initializable {
             if (keyEvent.getCode() == KeyCode.A) leftPressed = true;
             if (keyEvent.getCode() == KeyCode.D) rightPressed = true;
             if (keyEvent.getCode() == KeyCode.W) straightPressed = true;
+            if (keyEvent.getCode() == KeyCode.S) backPressed = true;
         });
         theStage.getScene().setOnKeyReleased(keyEvent -> {
             if (keyEvent.getCode() == KeyCode.SPACE) spacePressed = false;
             if (keyEvent.getCode() == KeyCode.A) leftPressed = false;
             if (keyEvent.getCode() == KeyCode.D) rightPressed = false;
             if (keyEvent.getCode() == KeyCode.W) straightPressed = false;
+            if (keyEvent.getCode() == KeyCode.S) backPressed = false;
         });
         theStage.setResizable(false);
         theStage.show();
@@ -111,6 +115,8 @@ public class Controller implements Initializable {
 
         player = new Player();
         player.setVelocity(new Point2D(0, 0));
+        player.setHealthPointsMax(100);
+        player.setFireSpeed(8);
 
         addCntrlblObjct(player, root.getPrefWidth() / 2, root.getPrefHeight() / 2);
         addWall(new Wall(), 10, 0, false);
@@ -140,32 +146,44 @@ public class Controller implements Initializable {
         return root;
     }
 
-    private void addBullet(CntrlblObjct bullet, double x, double y) {
+    private void addBullet(Bullet bullet, double x, double y) {
         bullets.add(bullet);
+        bullet.setBulletDamage(10);
+        bullet.setBulletSpeed(3);
+        bullet.setColor(Color.BLUEVIOLET);
+        bullet.getView().toBack();
         addCntrlblObjct(bullet, x, y);
     }
 
-    private void addBulletNoDamage(CntrlblObjct bullet, double x, double y) {
+    private void addBulletNoDamage(Bullet bullet, double x, double y) {
         bulletsNoDamage.add(bullet);
         bullet.setSpawnTime();
+        bullet.setColor(player.getColor());
+        bullet.getView().toBack();
         addCntrlblObjct(bullet, x, y);
     }
 
-    private void addBulletEnemie(CntrlblObjct bullet, double x, double y) {
+    private void addBulletEnemie(Bullet bullet, double x, double y) {
         bulletsEnemies.add(bullet);
+        bullet.setBulletSpeed(1.5);
+        bullet.setBulletDamage(10);
         bullet.setSpawnTime();
         addCntrlblObjct(bullet, x, y);
         bullet.setColor(Color.RED);
     }
 
-    private void addEnemy(CntrlblObjct enemy, double x, double y) {
+    private void addEnemy(Enemy enemy, double x, double y) {
         enemies.add(enemy);
+        enemy.setSpeed(0.7);
+        enemy.setHealthPointsMax(40);
+        enemy.setFireSpeed(3);
         addCntrlblObjct(enemy, x, y);
     }
 
-    private void addWall(CntrlblObjct wall, double x, double y, boolean isRotated) {
+    private void addWall(Wall wall, double x, double y, boolean isRotated) {
         if (isRotated) wall.setRotateObj();
         walls.add(wall);
+        wall.getView().setStyle("-fx-stroke:" + "#ff1de3");
         addCntrlblObjct(wall, x, y);
     }
 
@@ -179,6 +197,7 @@ public class Controller implements Initializable {
     private void addCntrlblObjct(CntrlblObjct obj, double x, double y) {
         obj.getView().setTranslateX(x);
         obj.getView().setTranslateY(y);
+        obj.setHealthPoints(obj.getHealthPointsMax());
         //add obj to root Node
         root.getChildren().add(obj.getView());
     }
@@ -195,19 +214,32 @@ public class Controller implements Initializable {
         for (CntrlblObjct enemy : enemies) {
             //collision enemy : player
             if (player.isColliding_Contains(enemy)) {
-                player.setAlive(false);
-
+                player.subtractHealthPoints(enemy.getHealthPoints());
+                enemy.subtractHealthPoints(player.getHealthPoints());
             }
-            //collision bullet enemy
-            for (CntrlblObjct bullet : bullets) {
-                if (enemy.isColliding_Contains(bullet)) {
-                    bullet.setAlive(false);
-                    enemy.setAlive(false);
-                    //remove from view
-                    root.getChildren().removeAll(bullet.getView(), enemy.getView());
-                    EXP.set(EXP.get() + 50);
+            if (enemy.getHealthPoints() <= 0) {
+                enemy.setAlive(false);
+                root.getChildren().remove(enemy.getView());
+            } else
+                //collision bullet enemy
+                for (Bullet bullet : bullets) {
+                    if (enemy.isColliding_Contains(bullet)) {
+                        enemy.subtractHealthPoints(bullet.getBulletDamage());
+                        if (enemy.getHealthPoints() <= 0) {
+                            enemy.setAlive(false);
+                            root.getChildren().remove(enemy.getView());
+                            bullet.setBulletDamage(bullet.getBulletDamage() * bullet.getBulletPenetration());
+                            EXP.set(EXP.get() + 1000);
+                            EXP.set(EXP.get() + 50);
+                        } else {
+                            bullet.setAlive(false);
+                            EXP.set(EXP.get() + 50);
+                            root.getChildren().remove(bullet.getView());
+                        }
+                        //remove from view
+                    }
                 }
-            }
+
         }
         for (CntrlblObjct wall : walls) {
             //collision wall player
@@ -231,11 +263,17 @@ public class Controller implements Initializable {
             }
         }
         //collision bulletEnemie : player
-        for (CntrlblObjct bulletFromEnemie : bulletsEnemies) {
+        for (Bullet bulletFromEnemie : bulletsEnemies) {
             if (player.isColliding_Contains(bulletFromEnemie)) {
-                player.setAlive(false);
-                bulletFromEnemie.setAlive(false);
-                root.getChildren().remove(bulletFromEnemie.getView());
+                player.subtractHealthPoints(bulletFromEnemie.getBulletDamage());
+                if (player.getHealthPoints() <= 0) {
+                    player.setAlive(false);
+                } else {
+                    bulletFromEnemie.setAlive(false);
+                    root.getChildren().remove(bulletFromEnemie.getView());
+                }
+
+
             }
             if (System.currentTimeMillis() - bulletFromEnemie.getSpawnTime() > 3000) {
                 bulletFromEnemie.setAlive(false);
@@ -245,24 +283,30 @@ public class Controller implements Initializable {
 /**
  * spawn przeciwników
  */
-        if (Math.random() < 0.03) {//how often it spawns
+        if (Math.random() < 0.02) {//how often it spawns
             addEnemy(new Enemy(), Math.random() * root.getPrefWidth(), Math.random() * root.getPrefHeight());
         }
+        //if(backPressed) addEnemy(new Enemy(), Math.random() * root.getPrefWidth(), Math.random() * root.getPrefHeight());
+
         /**
          * obłsuga klawiszy
          */
         counterFireSpeed++;
         if (counterFireSpeed >= 60 / player.getFireSpeed()) fire = true;
 
-        if (rightPressed) player.rotateRight();
-        if (leftPressed) player.rotateLeft();
+        if (rightPressed)
+            if (backPressed) player.rotateLeft(); //cause of the reason
+            else player.rotateRight();
+        if (leftPressed)
+            if (backPressed) player.rotateRight();
+            else player.rotateLeft();
         if (straightPressed) player.moveStraight();
-        if (!straightPressed) player.setVelocity(new Point2D(0, 0));
+        if (backPressed) player.moveBack();
+        if (!straightPressed && !backPressed) player.setVelocity(new Point2D(0, 0));
         if (spacePressed == true && fire == true) {
             Bullet bullet = new Bullet();
-            bullet.setVelocity(new Point2D(Math.cos(Math.toRadians(player.getRotate())) * 2, Math.sin(Math.toRadians(player.getRotate())) * 2).normalize().multiply(3));
             addBullet(bullet, player.getView().getTranslateX() + 20, player.getView().getTranslateY() + 20);
-
+            bullet.setVelocity(new Point2D(Math.cos(Math.toRadians(player.getRotate())), Math.sin(Math.toRadians(player.getRotate()))).multiply(bullet.getBulletSpeed()));
             fire = false;
             counterFireSpeed = 0;
         }
@@ -281,23 +325,23 @@ public class Controller implements Initializable {
         /**
          * nadanie śledzenia, prędkości oraz możlwiości strzelania
          */
-        for (CntrlblObjct enemy : enemies) {
+        for (Enemy enemy : enemies) {
             Point2D enemyVel = new Point2D(player.getView().getTranslateX(), player.getView().getTranslateY())
                     .subtract(enemy.getView().getTranslateX(), enemy.getView().getTranslateY())
                     .normalize()
-                    .multiply(0.5);
+                    .multiply(enemy.getSpeed());
 
             enemy.setVelocity(enemyVel);
             //enemy bullet
             if (Math.random() < enemy.getFireSpeed() / 500) {
                 Bullet bullet = new Bullet();
-                bullet.setBulletSpeed(5);
-                bullet.setVelocity(enemyVel.multiply(bullet.getBulletSpeed()));
                 addBulletEnemie(bullet, enemy.getView().getTranslateX() + 20, enemy.getView().getTranslateY() + 20);
+                bullet.setVelocity(enemyVel.normalize().multiply(bullet.getBulletSpeed()));
             }
         }
         counterEnemySpeed = 0;
 
+        if (player.getHealthPoints() <= 0) player.setAlive(false);
 /**
  * czyszczenie list z niepotrzebnych już obiektow
  */
@@ -307,10 +351,10 @@ public class Controller implements Initializable {
         bulletsEnemies.removeIf(CntrlblObjct::isNotAlive);
         bulletsNoDamage.removeIf(CntrlblObjct::isNotAlive);
 
-        bullets.forEach(CntrlblObjct::update);
-        enemies.forEach(CntrlblObjct::update);
-        bulletsEnemies.forEach(CntrlblObjct::update);
-        bulletsNoDamage.forEach(CntrlblObjct::update);
+        bullets.forEach(Bullet::update);
+        enemies.forEach(Enemy::update);
+        bulletsEnemies.forEach(Bullet::update);
+        bulletsNoDamage.forEach(Bullet::update);
 /**
  * Jeśli gracz nie przeszedł dalej, wyświetlenie podsumowania, ostatnie menu
  */

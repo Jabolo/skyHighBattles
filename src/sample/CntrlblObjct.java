@@ -1,7 +1,6 @@
 package sample;
 
 import javafx.geometry.Point2D;
-import javafx.scene.Node;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Shape;
 
@@ -13,11 +12,14 @@ public class CntrlblObjct {
 
     private Shape view;
     private Point2D velocity = new Point2D(0, 0);
-
     private boolean alive = true;
-    private double fireSpeed = 10;
+    private int fireSpeed;
     private double spawnTime;
-
+    private int healthPointsMax;
+    private int healthPoints;
+    private Color color;
+    private double speed = 10;
+    private String name;
 
     public CntrlblObjct(Shape view) {
         this.view = view;
@@ -28,6 +30,14 @@ public class CntrlblObjct {
         view.setTranslateY(view.getTranslateY() + velocity.getY());
     }
 
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
     public Point2D getVelocity() {
         return velocity;
     }
@@ -36,16 +46,21 @@ public class CntrlblObjct {
         this.velocity = velocity;
     }
 
-    public Node getView() {
+    public Shape getView() {
         return view;
     }
 
-    public void setColor(Color x) {
-        view.setFill(x);
+    public Color getColor() {
+        return color;
     }
 
     public void setAlive(boolean alive) {
         this.alive = alive;
+    }
+
+    public void setColor(Color x) {
+        view.setFill(x);
+        color = x;
     }
 
     public boolean isNotAlive() {
@@ -58,6 +73,10 @@ public class CntrlblObjct {
 
     public void setRotateObj() {
         view.setRotate(view.getRotate() - 90);
+    }
+
+    public void subtractHealthPoints(int x) {
+        this.setHealthPoints(getHealthPoints() - x);
     }
 
     /**
@@ -77,12 +96,21 @@ public class CntrlblObjct {
         setVelocity(new Point2D(Math.cos(Math.toRadians(getRotate())) * 2, Math.sin(Math.toRadians(getRotate())) * 2));
     }
 
+    public void moveBack() {
+        //   setVelocity(new Point2D(Math.cos(Math.toRadians(getRotate()+180)) * 2 , Math.sin(Math.toRadians(getRotate()+180)) * 2));
+        setVelocity(new Point2D(Math.cos(Math.toRadians(getRotate())) * -2, Math.sin(Math.toRadians(getRotate())) * -2));
+    }
+
     public boolean isColliding(CntrlblObjct sth) {
         return getView().getBoundsInParent().intersects(sth.getView().getBoundsInParent());
     }
 
     public boolean isColliding_Contains(CntrlblObjct sth) {
         return getView().getBoundsInParent().contains(sth.getView().getBoundsInParent());
+    }
+
+    public void setFireSpeed(int fireSpeed) {
+        this.fireSpeed = fireSpeed;
     }
 
     public double getFireSpeed() {
@@ -96,4 +124,29 @@ public class CntrlblObjct {
     public double getSpawnTime() {
         return spawnTime;
     }
+
+    public int getHealthPoints() {
+        return healthPoints;
+    }
+
+    public void setHealthPoints(int healthPoints) {
+        this.healthPoints = healthPoints;
+    }
+
+    public double getSpeed() {
+        return speed;
+    }
+
+    public void setSpeed(double speed) {
+        this.speed = speed;
+    }
+
+    public int getHealthPointsMax() {
+        return healthPointsMax;
+    }
+
+    public void setHealthPointsMax(int healthPointsMax) {
+        this.healthPointsMax = healthPointsMax;
+    }
+
 }
